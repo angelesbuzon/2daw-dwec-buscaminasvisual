@@ -30,9 +30,14 @@ let numberOfMines = 0;
 let inputIsValid;
 
 window.onload = function() {
-    
+    // WIP:
+    // - Repasar nombres del tipo de evento
+    // - Crear funciones
+    visualPlayerBoard.addEventListener("click", e => revealBox(e)); // WIP
+    visualPlayerBoard.addEventListener("contextmenu", e => placeFlag(e)); // WIP
+    visualPlayerBoard.addEventListener("dblclick", e => removeFlag(e)); // WIP
 
-    //contenedorMiniaturas.addEventListener("click", e => cambiarImagen(e));
+    // Ojo: cuando pierda/gane, usar removeEventListener donde sea
 }
 
 /* -------
