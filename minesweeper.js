@@ -5,14 +5,14 @@
  * 
  * Two boards:
  * logicBoard    =>  values generated at the beginning
- * playerBoard  =>  values hidden (all cells are initially x, and when revealed -1 = * and 0 = " ")
+ * visualPlayerBoard  => HTML with JS mouse listeners
  * 
  * Values generated in logicBoard:
  * -1   =   mine
  * 0    =   non-adjacent
  * 1...8   =   adjacent
  * 
- * console.log's for playing are in the target language
+ * User-oriented text is in the target language
  * console.debug's are in English (viewed with Debugger enabled in browser)
  */
 
@@ -20,29 +20,15 @@
 /* ------------------------------------------------------------------------------------------------------------------------------
  * Variables and Listeners
  * ------------------------------------------------------------------------------------------------------------------------------ */
-const visualPlayerBoard = document.getElementById("visualBoard");
-console.log("hola");
-
 let logicBoard = [[]];
-let playerBoard = [[]];
+const visualPlayerBoard = document.getElementById("visualBoard");
 let boardSize = 0;
 let numberOfMines = 0;
 let inputIsValid;
 
-window.onload = function() {
-    // WIP:
-    // - Repasar nombres del tipo de evento
-    // - Crear funciones
-    visualPlayerBoard.addEventListener("click", e => revealBox(e)); // WIP
-    visualPlayerBoard.addEventListener("contextmenu", e => placeFlag(e)); // WIP
-    visualPlayerBoard.addEventListener("dblclick", e => removeFlag(e)); // WIP
-
-    // Ojo: cuando pierda/gane, usar removeEventListener donde sea
-}
-
-/* -------
-    Input
-   ------- */
+/* ---------------
+    Initial Input
+   --------------- */
    
 do {
     inputIsValid = false;
@@ -60,18 +46,47 @@ if (numberOfMines < 1) numberOfMines = 1; // In case that parseInt returns 0
 alert(`Se creará un tablero ${boardSize}x${boardSize} con ${numberOfMines} ` + ((numberOfMines === 1) ? "mina." : "minas."));
 console.debug(`Number of mines: ${numberOfMines}`);
 
+
+/* ----------------------
+    Generation of Boards
+   ---------------------- */
+// Logic board
+logicBoard = generateLogicBoard(boardSize, "0");
+placeMines(logicBoard, boardSize, numberOfMines);
+console.debug(`Logic board generated:`);
+console.table(logicBoard);
+console.debug(`=====`);
+
+// Visual HTML board
+generateVisualPlayerBoard(boardSize);
+console.debug(`Visual player board generated:`);
+console.log(visualPlayerBoard);
+console.debug(`=====`);
+
+// Grid/matrix based on visual HTML board to compare logic board with
+let grid = visualPlayerBoard.getElementsByTagName("tr");
+grid = Array.from(grid);
+for (let i = 0; i < grid.length; i++) {
+    grid[i] = grid[i].getElementsByTagName("td");
+}
+console.debug(`Grid generated:`);
+console.table(grid);
+console.debug(`=====`);
+
+
 /* --------------
     Ready, set...
    -------------- */
-logicBoard = generateLogicBoard(boardSize, "0");
-console.debug(`Logic board generated`);
-placeMines(logicBoard, boardSize, numberOfMines);
+window.onload = function() {
+    // WIP:
+    // - Crear funciones
 
-playerBoard = generatePlayerBoard(boardSize);
-console.debug(`Player board generated`);
+    visualPlayerBoard.addEventListener("click", e => revealBox(e)); // WIP (a ver cómo hago el match con el logicBoard primero)
+    visualPlayerBoard.addEventListener("contextmenu", e => placeFlag(e)); 
+    visualPlayerBoard.addEventListener("dblclick", e => removeFlag(e)); // WIP
 
-// Show logicBoard for debugging
-console.table(logicBoard);
+    // WIP Ojo: cuando pierda/gane, usar removeEventListener donde sea
+}
 
 /* -------
     Go!
@@ -83,12 +98,31 @@ console.table(logicBoard);
  * Functions: Visual HTML
  * ------------------------------------------------------------------------------------------------------------------------------ */
 
+function revealBox(leftClick) {
+    leftClick.target.classList.add("revealed");
+    console.debug(`Box revealed`);
+    console.debug(`=====`);
+}
 
-function generatePlayerBoard(size) {
-    // Generate rows (TRs)
+function placeFlag(rightClick) {
+    if (rightClick.target.classList.contains("flagged")) {
+        rightClick.target.innerHTML = "";
+        rightClick.target.classList.remove("flagged");
+        console.debug("Box un-flagged");
+    } else {
+        rightClick.target.innerHTML = "<p>🚩</p>";
+        rightClick.target.classList.add("flagged");
+        console.debug("Box flagged");
+    }
+
+    console.debug(`=====`);
+}
+
+function generateVisualPlayerBoard(size) {
     const newRow = document.createElement("tr");
     const newCell = document.createElement("td");
 
+    // Generate rows (TRs)
     for (i = 0; i < size; i++) {
         /*
          * If appendChild(newRow) is used as is, it only ever creates one newRow even in a loop
@@ -125,7 +159,7 @@ function generateLogicBoard(size, emptyChar) {
 function placeMines(logicBoard, boardSize, numberOfMines) {
     /*
      * Create random [row, col] coordenates,
-     * store them in function-level array to keep track and avoid repetitions,
+     * store them in function-level array to track them and avoid repetitions,
      * and add each new mine to the logic board
      */
     
@@ -170,21 +204,21 @@ function placeMines(logicBoard, boardSize, numberOfMines) {
             for (j = col-1; j <= col+1; j++) {
                 if (j < 0 || j >= boardSize) continue;
                 else if (i == row && j == col) continue;
-                else updateAdjacentBoxes(logicBoard, i, j);
+                else updateLogicalAdjacentBoxes(logicBoard, i, j);
             }
         }
         console.debug(`Finished placing mine [${row}][${col}]`)
     }
 
     console.debug(`Aaand that was the last mine`)
+    console.debug(`=====`);
 }
 
 function getRandomCoordinate(min, max) {
     return Math.floor(Math.random() * (max + 1));
 }
 
-function updateAdjacentBoxes(logicBoard, r, c) {
-    // Used in placeMines()
+function updateLogicalAdjacentBoxes(logicBoard, r, c) {
     if (logicBoard[r][c] !== -1) {
         logicBoard[r][c]++;
         console.debug(`Adjacent [${r}][${c}] updated`)
@@ -216,7 +250,9 @@ function showEmptyAdjacentBoxes(logicBoard, playerBoard, row, col) {
 }
 */
 
+/* WIP Cambiar esto para el juego visual en HTML
 function play(logicBoard, playerBoard) {
+    
     let playing = true;
     let row, col;
     let round = 0;
@@ -268,3 +304,4 @@ function play(logicBoard, playerBoard) {
         console.table(playerBoard);
     }
 }
+     */
