@@ -14,17 +14,21 @@
  * 
  * User-oriented text is in the target language
  * console.debug's are in English (viewed with Debugger enabled in browser)
+ * 
+ * Use data- attributes in HTML:
+ * https://developer.mozilla.org/en-US/docs/Web/HTML/How_to/Use_data_attributes
  */
 
 
 /* ------------------------------------------------------------------------------------------------------------------------------
  * Variables and Listeners
  * ------------------------------------------------------------------------------------------------------------------------------ */
-let logicBoard = [[]];
+var logicBoard = [[]];
 const visualPlayerBoard = document.getElementById("visualBoard");
 let boardSize = 0;
 let numberOfMines = 0;
 let inputIsValid;
+var playing = true;
 
 /* ---------------
     Initial Input
@@ -63,6 +67,7 @@ console.debug(`Visual player board generated:`);
 console.log(visualPlayerBoard);
 console.debug(`=====`);
 
+/*
 // Grid/matrix based on visual HTML board to compare logic board with
 let grid = visualPlayerBoard.getElementsByTagName("tr");
 grid = Array.from(grid);
@@ -72,7 +77,7 @@ for (let i = 0; i < grid.length; i++) {
 console.debug(`Grid generated:`);
 console.table(grid);
 console.debug(`=====`);
-
+*/
 
 /* --------------
     Ready, set...
@@ -99,9 +104,47 @@ window.onload = function() {
  * ------------------------------------------------------------------------------------------------------------------------------ */
 
 function revealBox(leftClick) {
+    // elemento.getAttribute("nombreAtributo")
+    const row = target.getAttribute("data-row");
+    const col = target.getAttribute("data-column");
+
+    const equivalentLogicCell = checkLogicCell(row, col);
+
+    if (equivalentLogicCell == -1) {
+        leftClick.target.innerHTML = "<p>💣</p>";
+        console.error(`BOOM! GAME OVER`);
+        // WIP: en vez de playing false usar removeListener seguramente
+        playing = false;
+    } else if (equivalentLogicCell == 0) {
+        // Reveal box by box
+        leftClick.target.innerHTML = "<p>💣</p>";
+        console.debug(`Empty cell revealed`);
+
+        // Reveal all empty adjacent boxes (unfinished...)
+        // showEmptyAdjacentBoxes(logicBoard, playerBoard, row, col);
+    } else {
+        leftClick.target.innerHTML = `<p>${equivalentLogicCell}</p>`;
+        console.warn(`Number cell revealed`);
+    }
+
     leftClick.target.classList.add("revealed");
-    console.debug(`Box revealed`);
+    console.debug(`Class of revealed td changed to 'revealed'`);
     console.debug(`=====`);
+}
+
+function checkLogicCell(row, col) {
+    if (logicBoard[row][col] == -1) {
+        //playerBoard[row][col] = "*";
+        return -1;
+        
+    } else if (logicBoard[row][col] == 0) {
+        // playerBoard[row][col] = " ";
+        return 0;
+
+    } else {
+        //playerBoard[row][col] = logicBoard[row][col];
+        return parseInt(logicBoard[row][col]);
+    }
 }
 
 function placeFlag(rightClick) {
@@ -131,10 +174,16 @@ function generateVisualPlayerBoard(size) {
 
         visualPlayerBoard.appendChild(newRow.cloneNode(true));
 
-        // Generate cells (TDs) for each row
         let currentRow = visualPlayerBoard.lastChild;
+
+        // Generate cells (TDs) for each row
         for (j = 0; j < size; j++) {
             currentRow.appendChild(newCell.cloneNode(true));
+            
+            let currentCell = currentRow.lastChild;
+            //element.setAttribute("name", "value");
+            currentCell.setAttribute("data-row", i);
+            currentCell.setAttribute("data-column", j);
         }
     }
 }
@@ -250,7 +299,8 @@ function showEmptyAdjacentBoxes(logicBoard, playerBoard, row, col) {
 }
 */
 
-/* WIP Cambiar esto para el juego visual en HTML
+/* DEPRECATED:
+WIP Cambiar esto para el juego visual en HTML
 function play(logicBoard, playerBoard) {
     
     let playing = true;
