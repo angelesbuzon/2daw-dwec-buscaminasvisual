@@ -105,6 +105,7 @@ window.onload = function() {
 
 function stopPlaying() {
     visualPlayerBoard.removeEventListener("click", leftClick => revealBox(leftClick));
+    console.log("me cagonto");
     visualPlayerBoard.removeEventListener("contextmenu", rightClick => placeFlag(rightClick)); 
     visualPlayerBoard.removeEventListener("dblclick", doubleClick => removeFlag(doubleClick));
 }
@@ -123,6 +124,8 @@ function revealBox(leftClick) {
         console.error(`BOOM! GAME OVER`);
         
         stopPlaying();
+
+        console.log("holi holi");
     } else if (equivalentLogicCell == 0) {
         // Reveal box by box
         box.innerHTML = "<p></p>";
