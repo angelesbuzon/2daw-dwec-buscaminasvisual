@@ -28,11 +28,9 @@ table#visualBoard {
 }
 
 td.revealed {
-    border: 1px solid green;
-        /* debug */
-
+    background-color: #fff !important;
 }
 
 .flagged {
-
+    background-
 }

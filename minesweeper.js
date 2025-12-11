@@ -86,9 +86,9 @@ window.onload = function() {
     // WIP:
     // - Crear funciones
 
-    visualPlayerBoard.addEventListener("click", e => revealBox(e)); // WIP (a ver cómo hago el match con el logicBoard primero)
-    visualPlayerBoard.addEventListener("contextmenu", e => placeFlag(e)); 
-    visualPlayerBoard.addEventListener("dblclick", e => removeFlag(e)); // WIP
+    visualPlayerBoard.addEventListener("click", leftClick => revealBox(leftClick)); // WIP (a ver cómo hago el match con el logicBoard primero)
+    visualPlayerBoard.addEventListener("contextmenu", rightClick => placeFlag(rightClick)); 
+    visualPlayerBoard.addEventListener("dblclick", doubleClick => removeFlag(doubleClick)); // WIP
 
     // WIP Ojo: cuando pierda/gane, usar removeEventListener donde sea
 }
@@ -103,32 +103,40 @@ window.onload = function() {
  * Functions: Visual HTML
  * ------------------------------------------------------------------------------------------------------------------------------ */
 
+function stopPlaying() {
+    visualPlayerBoard.removeEventListener("click", leftClick => revealBox(leftClick));
+    visualPlayerBoard.removeEventListener("contextmenu", rightClick => placeFlag(rightClick)); 
+    visualPlayerBoard.removeEventListener("dblclick", doubleClick => removeFlag(doubleClick));
+}
+
 function revealBox(leftClick) {
+    const box = leftClick.target;
+
     // elemento.getAttribute("nombreAtributo")
-    const row = target.getAttribute("data-row");
-    const col = target.getAttribute("data-column");
+    const row = box.getAttribute("data-row");
+    const col = box.getAttribute("data-column");
 
     const equivalentLogicCell = checkLogicCell(row, col);
 
     if (equivalentLogicCell == -1) {
-        leftClick.target.innerHTML = "<p>💣</p>";
+        box.innerHTML = "<p>💣</p>";
         console.error(`BOOM! GAME OVER`);
-        // WIP: en vez de playing false usar removeListener seguramente
-        playing = false;
+        
+        stopPlaying();
     } else if (equivalentLogicCell == 0) {
         // Reveal box by box
-        leftClick.target.innerHTML = "<p>💣</p>";
+        box.innerHTML = "<p></p>";
         console.debug(`Empty cell revealed`);
 
         // Reveal all empty adjacent boxes (unfinished...)
         // showEmptyAdjacentBoxes(logicBoard, playerBoard, row, col);
     } else {
-        leftClick.target.innerHTML = `<p>${equivalentLogicCell}</p>`;
+        box.innerHTML = `<p>${equivalentLogicCell}</p>`;
         console.warn(`Number cell revealed`);
     }
 
-    leftClick.target.classList.add("revealed");
-    console.debug(`Class of revealed td changed to 'revealed'`);
+    box.classList.add("revealed");
+    console.debug(`Class of cell [${row}][${col}] changed to 'revealed'`);
     console.debug(`=====`);
 }
 
@@ -161,29 +169,29 @@ function placeFlag(rightClick) {
     console.debug(`=====`);
 }
 
-function generateVisualPlayerBoard(size) {
-    const newRow = document.createElement("tr");
-    const newCell = document.createElement("td");
+function generateVisualPlayerBoard(boardSize) {
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
 
     // Generate rows (TRs)
-    for (i = 0; i < size; i++) {
+    for (rowIndex = 0; rowIndex < boardSize; rowIndex++) {
         /*
-         * If appendChild(newRow) is used as is, it only ever creates one newRow even in a loop
+         * If appendChild(row) is used as is, it only ever creates one row even in a loop
          * To append several children, add cloneNode(true): https://stackoverflow.com/a/12730905
          */
 
-        visualPlayerBoard.appendChild(newRow.cloneNode(true));
+        visualPlayerBoard.appendChild(row.cloneNode(true));
 
         let currentRow = visualPlayerBoard.lastChild;
 
         // Generate cells (TDs) for each row
-        for (j = 0; j < size; j++) {
-            currentRow.appendChild(newCell.cloneNode(true));
+        for (cellIndex = 0; cellIndex < boardSize; cellIndex++) {
+            currentRow.appendChild(cell.cloneNode(true));
             
             let currentCell = currentRow.lastChild;
             //element.setAttribute("name", "value");
-            currentCell.setAttribute("data-row", i);
-            currentCell.setAttribute("data-column", j);
+            currentCell.setAttribute("data-row", rowIndex);
+            currentCell.setAttribute("data-column", cellIndex);
         }
     }
 }
