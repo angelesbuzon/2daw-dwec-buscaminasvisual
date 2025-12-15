@@ -12,25 +12,28 @@ body {
 }
 
 table#visualBoard {
-    border: 1px solid #575757;
-    background-color: #575757;
+    border: 1px solid #111111;
+    background-color: #111111;
 
     td {
-        background-color: #eee;
+        background-color: #dfcd9d;
         width: 50px;
         height: 50px;
 
         * {
             text-align: center;
         }
-        
+
+        &.revealed {
+            background-color: #fff !important;
+        }
+
+        &.bombed {
+            background-color: #741a1a !important;
+        }
     }
 }
 
-td.revealed {
-    background-color: #fff !important;
-}
-
 .flagged {
-    background-
+    /* WIP */
 }

@@ -12,10 +12,10 @@
  * 0    =   non-adjacent
  * 1...8   =   adjacent
  * 
- * User-oriented text is in the target language
- * console.debug's are in English (viewed with Debugger enabled in browser)
+ * User-oriented text is in the target language.
+ * console.debug's are in English (viewed with Debugger enabled in browser).
  * 
- * Use data- attributes in HTML:
+ * Using data- attributes in HTML:
  * https://developer.mozilla.org/en-US/docs/Web/HTML/How_to/Use_data_attributes
  */
 
@@ -27,12 +27,14 @@ var logicBoard = [[]];
 const visualPlayerBoard = document.getElementById("visualBoard");
 let boardSize = 0;
 let numberOfMines = 0;
+let numberOfBoxesGenerated = 0;
+let numberOfBoxesToReveal = 0;
+let numberOfBoxesRevealed = 0;
 let inputIsValid;
-var playing = true;
 
 /* ---------------
-    Initial Input
-   --------------- */
+ * Initial Input
+ * --------------- */
    
 do {
     inputIsValid = false;
@@ -47,13 +49,17 @@ do {
 numberOfMines = parseInt(boardSize * 0.2);
 if (numberOfMines < 1) numberOfMines = 1; // In case that parseInt returns 0
 
+numberOfBoxesGenerated = boardSize * boardSize;
+numberOfBoxesToReveal = numberOfBoxesGenerated - numberOfMines; /* To check if the player has won */
+
 alert(`Se creará un tablero ${boardSize}x${boardSize} con ${numberOfMines} ` + ((numberOfMines === 1) ? "mina." : "minas."));
 console.debug(`Number of mines: ${numberOfMines}`);
 
 
 /* ----------------------
-    Generation of Boards
-   ---------------------- */
+ * Generation of Boards
+ * ---------------------- */
+
 // Logic board
 logicBoard = generateLogicBoard(boardSize, "0");
 placeMines(logicBoard, boardSize, numberOfMines);
@@ -67,107 +73,95 @@ console.debug(`Visual player board generated:`);
 console.log(visualPlayerBoard);
 console.debug(`=====`);
 
-/*
-// Grid/matrix based on visual HTML board to compare logic board with
-let grid = visualPlayerBoard.getElementsByTagName("tr");
-grid = Array.from(grid);
-for (let i = 0; i < grid.length; i++) {
-    grid[i] = grid[i].getElementsByTagName("td");
-}
-console.debug(`Grid generated:`);
-console.table(grid);
-console.debug(`=====`);
-*/
-
 /* --------------
-    Ready, set...
-   -------------- */
+ * Playing!
+ * -------------- */
 window.onload = function() {
     // WIP:
     // - Crear funciones
 
-    visualPlayerBoard.addEventListener("click", handleLeftClick); // WIP (a ver cómo hago el match con el logicBoard primero)
+    visualPlayerBoard.addEventListener("click", handleLeftClick);
     visualPlayerBoard.addEventListener("contextmenu", handleRightClick); 
     visualPlayerBoard.addEventListener("dblclick", handleDoubleClick); // WIP
-
-    // WIP Ojo: cuando pierda/gane, usar removeEventListener donde sea
 }
-
-/* -------
-    Go!
-   ------- */
-//play(logicBoard, playerBoard);
-
 
 /* ------------------------------------------------------------------------------------------------------------------------------
  * Functions: Visual HTML
  * ------------------------------------------------------------------------------------------------------------------------------ */
 
 function stopPlaying() {
+    /* Blocks board, both when losing and when winning */
     visualPlayerBoard.removeEventListener("click", handleLeftClick);
     visualPlayerBoard.removeEventListener("contextmenu", handleRightClick); 
     visualPlayerBoard.removeEventListener("dblclick", handleDoubleClick);
-    console.debug(`Game over (supposedly)`);
+    console.debug(`stopPlaying() executed`);
 }
 
 function revealBox(leftClick) {
     const box = leftClick.target;
-
-    // elemento.getAttribute("nombreAtributo")
     const row = box.getAttribute("data-row");
     const col = box.getAttribute("data-column");
-
     const equivalentLogicCell = checkLogicCell(row, col);
+
+    box.classList.add("revealed");
+    numberOfBoxesRevealed++;
+    console.debug(`Class of cell [${row}][${col}] changed to 'revealed'`);
+    console.debug(`Number of boxes revealed: ${numberOfBoxesRevealed} (total boxes to reveal: ${numberOfBoxesToReveal})`);
 
     if (equivalentLogicCell == -1) {
         box.innerHTML = "<p>💣</p>";
+        box.classList.add("bombed");
         console.error(`BOOM! GAME OVER`);
-        
         stopPlaying();
-    } else if (equivalentLogicCell == 0) {
-        // Reveal box by box
-        box.innerHTML = "<p></p>";
-        console.debug(`Empty cell revealed`);
-
-        // Reveal all empty adjacent boxes (unfinished...)
-        // showEmptyAdjacentBoxes(logicBoard, playerBoard, row, col);
     } else {
-        box.innerHTML = `<p>${equivalentLogicCell}</p>`;
-        console.warn(`Number cell revealed`);
+        if (equivalentLogicCell == 0) {
+            // Reveal box by box
+            box.innerHTML = "<p></p>";
+            console.debug(`Empty cell revealed`);
+
+            // Reveal all empty adjacent boxes (unfinished...)
+            // showEmptyAdjacentBoxes(logicBoard, playerBoard, row, col);
+        } else {
+            box.innerHTML = `<p>${equivalentLogicCell}</p>`;
+            console.warn(`Number cell revealed`);
+        }
     }
 
-    box.classList.add("revealed");
-    console.debug(`Class of cell [${row}][${col}] changed to 'revealed'`);
     console.debug(`=====`);
+}
+
+function playerCanKeepPlaying() {
+    if (numberOfBoxesRevealed >= numberOfBoxesToReveal) return false;
+    else return true;
 }
 
 function checkLogicCell(row, col) {
-    if (logicBoard[row][col] == -1) {
-        //playerBoard[row][col] = "*";
-        return -1;
-        
-    } else if (logicBoard[row][col] == 0) {
-        // playerBoard[row][col] = " ";
-        return 0;
+    if (logicBoard[row][col] == -1) return -1;
+    else if (logicBoard[row][col] == 0) return 0;
+    else return parseInt(logicBoard[row][col]);
+}
 
-    } else {
-        //playerBoard[row][col] = logicBoard[row][col];
-        return parseInt(logicBoard[row][col]);
+/** WIP: Cambiar el insertar HTML en banderas y bombas y números por hacer que la clase tenga un fondo, porque si no los clics me dan problemas */
+
+function placeFlag(rightClick) {
+    if (!rightClick.target.classList.contains("flagged")
+    && !rightClick.target.classList.contains("revealed")) {
+        rightClick.target.innerHTML = "<p>🚩</p>";
+        rightClick.target.classList.add("flagged");
+
+        console.debug("Box flagged");
+        console.debug(`=====`);
     }
 }
 
-function placeFlag(rightClick) {
-    if (rightClick.target.classList.contains("flagged")) {
-        rightClick.target.innerHTML = "";
-        rightClick.target.classList.remove("flagged");
-        console.debug("Box un-flagged");
-    } else {
-        rightClick.target.innerHTML = "<p>🚩</p>";
-        rightClick.target.classList.add("flagged");
-        console.debug("Box flagged");
-    }
+function removeFlag(doubleClick) {
+    if (doubleClick.target.classList.contains("flagged")) {
+        doubleClick.target.innerHTML = "";
+        doubleClick.target.classList.remove("flagged");
 
-    console.debug(`=====`);
+        console.debug("Box un-flagged");
+        console.debug(`=====`);
+    }
 }
 
 function generateVisualPlayerBoard(boardSize) {
@@ -177,7 +171,7 @@ function generateVisualPlayerBoard(boardSize) {
     // Generate rows (TRs)
     for (rowIndex = 0; rowIndex < boardSize; rowIndex++) {
         /*
-         * If appendChild(row) is used as is, it only ever creates one row even in a loop
+         * If appendChild(row) is used as is, it only ever creates one row even in a loop.
          * To append several children, add cloneNode(true): https://stackoverflow.com/a/12730905
          */
 
@@ -190,25 +184,42 @@ function generateVisualPlayerBoard(boardSize) {
             currentRow.appendChild(cell.cloneNode(true));
             
             let currentCell = currentRow.lastChild;
-            //element.setAttribute("name", "value");
             currentCell.setAttribute("data-row", rowIndex);
             currentCell.setAttribute("data-column", cellIndex);
         }
     }
 }
 
+function playerWins() {
+    console.info(`PLAYER WINS :)`);
+    // WIP: 
+    // -Show congrats message,
+    // -show button to play again (refresh the page)
+}
 
 
 /* ------------------------------------------------------------------------------------------------------------------------------
-    Functions: Internal Logic
-   ------------------------------------------------------------------------------------------------------------------------------ */
+ *  Functions: Internal Logic
+ * ------------------------------------------------------------------------------------------------------------------------------ */
 
-/* Handlers so that we can use removeEventListener later: */
-function handleLeftClick(leftClick) { revealBox(leftClick); }
+/* Using handlers as per Google Gemini's suggestion when my removeEventListeners didn't work */
+
+function handleLeftClick(leftClick) {
+    //if () {
+        // WIP: Si no tiene puesta una bandera... (si no, tiene conflicto con dobleClic)
+    //}
+    revealBox(leftClick);
+    if (!playerCanKeepPlaying()) {
+        stopPlaying();
+        playerWins();
+    }
+}
+
 function handleRightClick(rightClick) { 
-    rightClick.preventDefault(); /* Prevents context menu from appearing */
+    rightClick.preventDefault(); /* Prevents context menu from appearing (it's cumbersome) */
     placeFlag(rightClick);
 }
+
 function handleDoubleClick(doubleClick) { removeFlag(doubleClick); }
 
 function generateLogicBoard(size, emptyChar) {
