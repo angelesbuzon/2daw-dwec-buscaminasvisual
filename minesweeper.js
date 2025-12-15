@@ -86,9 +86,9 @@ window.onload = function() {
     // WIP:
     // - Crear funciones
 
-    visualPlayerBoard.addEventListener("click", leftClick => revealBox(leftClick)); // WIP (a ver cómo hago el match con el logicBoard primero)
-    visualPlayerBoard.addEventListener("contextmenu", rightClick => placeFlag(rightClick)); 
-    visualPlayerBoard.addEventListener("dblclick", doubleClick => removeFlag(doubleClick)); // WIP
+    visualPlayerBoard.addEventListener("click", handleLeftClick); // WIP (a ver cómo hago el match con el logicBoard primero)
+    visualPlayerBoard.addEventListener("contextmenu", handleRightClick); 
+    visualPlayerBoard.addEventListener("dblclick", handleDoubleClick); // WIP
 
     // WIP Ojo: cuando pierda/gane, usar removeEventListener donde sea
 }
@@ -104,10 +104,10 @@ window.onload = function() {
  * ------------------------------------------------------------------------------------------------------------------------------ */
 
 function stopPlaying() {
-    visualPlayerBoard.removeEventListener("click", leftClick => revealBox(leftClick));
-    console.log("me cagonto");
-    visualPlayerBoard.removeEventListener("contextmenu", rightClick => placeFlag(rightClick)); 
-    visualPlayerBoard.removeEventListener("dblclick", doubleClick => removeFlag(doubleClick));
+    visualPlayerBoard.removeEventListener("click", handleLeftClick);
+    visualPlayerBoard.removeEventListener("contextmenu", handleRightClick); 
+    visualPlayerBoard.removeEventListener("dblclick", handleDoubleClick);
+    console.debug(`Game over (supposedly)`);
 }
 
 function revealBox(leftClick) {
@@ -124,8 +124,6 @@ function revealBox(leftClick) {
         console.error(`BOOM! GAME OVER`);
         
         stopPlaying();
-
-        console.log("holi holi");
     } else if (equivalentLogicCell == 0) {
         // Reveal box by box
         box.innerHTML = "<p></p>";
@@ -204,6 +202,15 @@ function generateVisualPlayerBoard(boardSize) {
 /* ------------------------------------------------------------------------------------------------------------------------------
     Functions: Internal Logic
    ------------------------------------------------------------------------------------------------------------------------------ */
+
+/* Handlers so that we can use removeEventListener later: */
+function handleLeftClick(leftClick) { revealBox(leftClick); }
+function handleRightClick(rightClick) { 
+    rightClick.preventDefault(); /* Prevents context menu from appearing */
+    placeFlag(rightClick);
+}
+function handleDoubleClick(doubleClick) { removeFlag(doubleClick); }
+
 function generateLogicBoard(size, emptyChar) {
     let brd = [];
 
@@ -284,85 +291,3 @@ function updateLogicalAdjacentBoxes(logicBoard, r, c) {
         console.debug(`Adjacent [${r}][${c}] updated`)
     } else console.debug(`Adjacent [${r}][${c}] is another mine`);
 }
-
-/* Unused for the time being:
-function showEmptyAdjacentBoxes(logicBoard, playerBoard, row, col) {
-    playerBoard[row][col] = " "; // To distinguish from non-touched cells
-
-    for (i = row-1; i <= row+1; i++) {
-        if (i < 0 || i >= logicBoard.length) continue; // Skip to next iteration if we are in a row border
-
-        for (j = col-1; j <= col+1; j++) {
-            // Using == instead of === sometimes to account for num/string
-
-            // Skip...
-            if (j < 0 || j >= logicBoard[i].length) continue; // ... if we are in a column border
-            else if (i === row && j === col) continue; // ... if we are in this very same cell
-            else if (logicBoard[i][j] == -1) continue; // ... if it's a mine
-            else if (playerBoard[i][j] !== "x") continue; // ... if it's already revealed
-
-            // Go on:
-            else if (logicBoard[i][j] == 0) showEmptyAdjacentBoxes(logicBoard, playerBoard, i, j); // Recursion
-            else playerBoard[i][j] = logicBoard[i][j]; // Show numeric flag and stop iteration
-            
-        }
-    }
-}
-*/
-
-/* DEPRECATED:
-WIP Cambiar esto para el juego visual en HTML
-function play(logicBoard, playerBoard) {
-    
-    let playing = true;
-    let row, col;
-    let round = 0;
-
-    console.info(`=== BUSCAMINAS ===`);
-    console.table(playerBoard); // First instance, with no values shown
-
-    while (playing) {
-        round++;
-        console.info(`=== RONDA ${round} ===`)
-        
-        do {
-            inputIsValid = false;
-
-            row = parseInt(prompt(`RONDA ${round} - Elige fila (0-${boardSize-1}):`));
-            
-            if (isNaN(row)) alert(`ERROR: Introduce un número en dígitos para la fila.`);
-            else if (row < 0) alert(`ERROR: La fila no puede ser menor que 0.`);
-            else inputIsValid = true;
-        } while (!inputIsValid);
-
-        do {
-            inputIsValid = false;
-
-            col = parseInt(prompt(`RONDA ${round} - Elige columna (0-${boardSize-1}):`));
-
-            if (isNaN(col)) alert(`ERROR: Introduce un número en dígitos para la columna.`);
-            else if (row < 0) alert(`ERROR: La columna no puede ser menor que 0.`);
-            else inputIsValid = true;
-        } while (!inputIsValid);
-
-        if (logicBoard[row][col] == -1) {
-            console.error(`¡BUM! Se acabó el juego.`);
-            playerBoard[row][col] = "*";
-            playing = false;
-        } else if (playerBoard[row][col] === " ") {
-            console.log(`Ya se ha destapado esa casilla.`);
-        } else if (logicBoard[row][col] == 0) {
-            // Reveal box by box
-            playerBoard[row][col] = " "; 
-
-            // Reveal all empty adjacent boxes (unfinished...)
-            // showEmptyAdjacentBoxes(logicBoard, playerBoard, row, col);
-        } else {
-            console.warn(`Una mina anda cerca...`);
-            playerBoard[row][col] = logicBoard[row][col];
-        }
-
-        console.table(playerBoard);
-    }
-}
-     */
