@@ -205,13 +205,13 @@ function playerWins() {
 /* Using handlers as per Google Gemini's suggestion when my removeEventListeners didn't work */
 
 function handleLeftClick(leftClick) {
-    //if () {
-        // WIP: Si no tiene puesta una bandera... (si no, tiene conflicto con dobleClic)
-    //}
-    revealBox(leftClick);
-    if (!playerCanKeepPlaying()) {
-        stopPlaying();
-        playerWins();
+    // IF to avoid runtime conflict with doubleClick
+    if (!leftClick.target.classList.contains("flagged")) {
+        revealBox(leftClick);
+        if (!playerCanKeepPlaying()) {
+            stopPlaying();
+            playerWins();
+        }
     }
 }
 
