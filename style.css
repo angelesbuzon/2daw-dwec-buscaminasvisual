@@ -1,3 +1,11 @@
+:root {
+    --rojo: rgb(182, 28, 28); 
+    --verde: green;
+    --beis: #dfcd9d;
+    --negro: #111111;
+    --blanco: #fff;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -6,17 +14,32 @@
 
 body {
     height: 100vh;
+    font-family: monospace;
+    font-size: 16px;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
+main {
+    & > * + * {
+        margin-top: 25px;
+    }
+}
+
+h1 {
+    font-size: 3rem;
+    text-align: center;
+    margin-bottom: 1lh;
+}
+
 table#visualBoard {
-    border: 1px solid #111111;
-    background-color: #111111;
+    border: 1px solid var(--negro);
+    background-color: var(--negro);
+    margin: auto;
 
     td {
-        background-color: #dfcd9d;
+        background-color: var(--beis);
         width: 50px;
         height: 50px;
 
@@ -25,15 +48,58 @@ table#visualBoard {
         }
 
         &.revealed {
-            background-color: #fff !important;
+            background-color: var(--blanco) !important;
         }
 
         &.bombed {
-            background-color: #741a1a !important;
+            background-color: var(--rojo) !important;
         }
     }
 }
 
 .flagged {
     /* WIP */
+}
+
+.wins {
+    font-weight: bold;
+    color: var(--verde);
+}
+
+.loses {
+    font-weight: bold;
+    color: var(--rojo);
+}
+
+div#finalMessage {
+    text-align: center;
+}
+
+div:has(#replayButton) {
+    display: flex;
+    justify-content: center;
+
+    button#replayButton {
+        color: var(--negro);
+        border: 1px solid var(--negro);
+        background-color: var(--beis);
+        border-radius: 10px;
+        padding: 10px 8px;
+        text-align: center;
+        font-size: 16px;
+        font-weight: bold;
+
+        visibility: hidden;
+
+        &:hover {
+            color: var(--blanco);
+            background-color: var(--negro);
+        }
+
+        &:active {
+            color: #fff;
+            background-color: var(--rojo);
+            border-color: var(--rojo);
+        }
+    }
 }

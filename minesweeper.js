@@ -31,6 +31,7 @@ let numberOfBoxesGenerated = 0;
 let numberOfBoxesToReveal = 0;
 let numberOfBoxesRevealed = 0;
 let inputIsValid;
+const replayButton = document.getElementById("replayButton");
 
 /* ---------------
  * Initial Input
@@ -50,7 +51,7 @@ numberOfMines = parseInt(boardSize * 0.2);
 if (numberOfMines < 1) numberOfMines = 1; // In case that parseInt returns 0
 
 numberOfBoxesGenerated = boardSize * boardSize;
-numberOfBoxesToReveal = numberOfBoxesGenerated - numberOfMines; /* To check if the player has won */
+numberOfBoxesToReveal = numberOfBoxesGenerated - numberOfMines; // To check if the player has won
 
 alert(`Se creará un tablero ${boardSize}x${boardSize} con ${numberOfMines} ` + ((numberOfMines === 1) ? "mina." : "minas."));
 console.debug(`Number of mines: ${numberOfMines}`);
@@ -77,24 +78,33 @@ console.debug(`=====`);
  * Playing!
  * -------------- */
 window.onload = function() {
-    // WIP:
-    // - Crear funciones
-
     visualPlayerBoard.addEventListener("click", handleLeftClick);
     visualPlayerBoard.addEventListener("contextmenu", handleRightClick); 
-    visualPlayerBoard.addEventListener("dblclick", handleDoubleClick); // WIP
+    visualPlayerBoard.addEventListener("dblclick", handleDoubleClick);
+
+    replayButton.addEventListener("click", playAgain);
 }
 
 /* ------------------------------------------------------------------------------------------------------------------------------
  * Functions: Visual HTML
  * ------------------------------------------------------------------------------------------------------------------------------ */
 
-function stopPlaying() {
-    /* Blocks board, both when losing and when winning */
+function playAgain() {
+    location.reload(); // Refresh page (F5)
+}
+
+function blockBoard() {
+    // Both when losing and when winning
     visualPlayerBoard.removeEventListener("click", handleLeftClick);
     visualPlayerBoard.removeEventListener("contextmenu", handleRightClick); 
     visualPlayerBoard.removeEventListener("dblclick", handleDoubleClick);
-    console.debug(`stopPlaying() executed`);
+    console.debug(`blockBoard() executed`);
+}
+
+function endGame(playerWins) {
+    blockBoard();
+    addFinalMessage(playerWins);
+    showReplayButton();
 }
 
 function revealBox(leftClick) {
@@ -109,14 +119,15 @@ function revealBox(leftClick) {
     console.debug(`Number of boxes revealed: ${numberOfBoxesRevealed} (total boxes to reveal: ${numberOfBoxesToReveal})`);
 
     if (equivalentLogicCell == -1) {
-        box.innerHTML = "<p>💣</p>";
+        box.innerHTML = "<p>💣</p>"; // WIP
         box.classList.add("bombed");
-        console.error(`BOOM! GAME OVER`);
-        stopPlaying();
+
+        endGame(false);
+        
     } else {
         if (equivalentLogicCell == 0) {
             // Reveal box by box
-            box.innerHTML = "<p></p>";
+            box.innerHTML = "";
             console.debug(`Empty cell revealed`);
 
             // Reveal all empty adjacent boxes (unfinished...)
@@ -190,11 +201,28 @@ function generateVisualPlayerBoard(boardSize) {
     }
 }
 
-function playerWins() {
-    console.info(`PLAYER WINS :)`);
-    // WIP: 
-    // -Show congrats message,
-    // -show button to play again (refresh the page)
+function addFinalMessage(playerWins) {
+    const finalMessage = document.getElementById("finalMessage");
+    let message = "";
+    let style = "";
+
+    if (playerWins) {
+        message = "¡HAS GANADO";
+        style = "wins";
+        console.info(`PLAYER WINS :)`);
+    } else {
+        message = "¡BUM! SE ACABÓ EL JUEGO";
+        style = "loses";
+        console.error(`PLAYER LOSES :()`);
+    }
+
+    finalMessage.innerHTML = `<p>${message}</p>`;
+    finalMessage.classList.add(style);
+}
+
+function showReplayButton() {
+    const replayButton = document.getElementById("replayButton");
+    replayButton.style.visibility = "visible";
 }
 
 
@@ -208,10 +236,7 @@ function handleLeftClick(leftClick) {
     // IF to avoid runtime conflict with doubleClick
     if (!leftClick.target.classList.contains("flagged")) {
         revealBox(leftClick);
-        if (!playerCanKeepPlaying()) {
-            stopPlaying();
-            playerWins();
-        }
+        if (!playerCanKeepPlaying()) endGame();
     }
 }
 
@@ -272,7 +297,7 @@ function placeMines(logicBoard, boardSize, numberOfMines) {
          * · · ·
          * · * ·
          * · · ·
-         * Teacher's recommendation on 2025/11/10: Do this part in a separate function executed at the same hierarchical for better memory efficiency
+         * WIP: Teacher's recommendation on 2025/11/10: Do this part in a separate function executed at the same hierarchical for better memory efficiency
          */
 
         console.debug(`Updating adjacents of mine [${row}][${col}]`);
