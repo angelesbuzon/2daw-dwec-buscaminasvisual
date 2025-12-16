@@ -26,11 +26,16 @@
 var logicBoard = [[]];
 const visualPlayerBoard = document.getElementById("visualBoard");
 let boardSize = 0;
+
 let numberOfMines = 0;
 let numberOfBoxesGenerated = 0;
 let numberOfBoxesToReveal = 0;
 let numberOfBoxesRevealed = 0;
+
 let inputIsValid;
+
+var mineCoordenates = []; // var so that it can be used in a couple of functions
+
 const replayButton = document.getElementById("replayButton");
 
 /* ---------------
@@ -86,166 +91,17 @@ window.onload = function() {
 }
 
 /* ------------------------------------------------------------------------------------------------------------------------------
- * Functions: Visual HTML
+ * Functions (more or less in order of usage)
  * ------------------------------------------------------------------------------------------------------------------------------ */
 
-function playAgain() {
-    location.reload(); // Refresh page (F5)
-}
+/**
+ * generateLogicBoard
+ * placeMines
+ * generateVisualPlayerBoard
+ * handleLeftClick
+ * playAgain
+ */
 
-function blockBoard() {
-    // Both when losing and when winning
-    visualPlayerBoard.removeEventListener("click", handleLeftClick);
-    visualPlayerBoard.removeEventListener("contextmenu", handleRightClick); 
-    visualPlayerBoard.removeEventListener("dblclick", handleDoubleClick);
-    console.debug(`blockBoard() executed`);
-}
-
-function endGame(playerWins) {
-    blockBoard();
-    addFinalMessage(playerWins);
-    showReplayButton();
-}
-
-function revealBox(leftClick) {
-    const box = leftClick.target;
-    const row = box.getAttribute("data-row");
-    const col = box.getAttribute("data-column");
-    const equivalentLogicCell = checkLogicCell(row, col);
-
-    box.classList.add("revealed");
-    numberOfBoxesRevealed++;
-    console.debug(`Class of cell [${row}][${col}] changed to 'revealed'`);
-    console.debug(`Number of boxes revealed: ${numberOfBoxesRevealed} (total boxes to reveal: ${numberOfBoxesToReveal})`);
-
-    if (equivalentLogicCell == -1) {
-        box.innerHTML = "<p>💣</p>"; // WIP
-        box.classList.add("bombed");
-
-        endGame(false);
-        
-    } else {
-        if (equivalentLogicCell == 0) {
-            // Reveal box by box
-            box.innerHTML = "";
-            console.debug(`Empty cell revealed`);
-
-            // Reveal all empty adjacent boxes (unfinished...)
-            // showEmptyAdjacentBoxes(logicBoard, playerBoard, row, col);
-        } else {
-            box.innerHTML = `<p>${equivalentLogicCell}</p>`;
-            console.warn(`Number cell revealed`);
-        }
-    }
-
-    console.debug(`=====`);
-}
-
-function playerCanKeepPlaying() {
-    if (numberOfBoxesRevealed >= numberOfBoxesToReveal) return false;
-    else return true;
-}
-
-function checkLogicCell(row, col) {
-    if (logicBoard[row][col] == -1) return -1;
-    else if (logicBoard[row][col] == 0) return 0;
-    else return parseInt(logicBoard[row][col]);
-}
-
-/** WIP: Cambiar el insertar HTML en banderas y bombas y números por hacer que la clase tenga un fondo, porque si no los clics me dan problemas */
-
-function placeFlag(rightClick) {
-    if (!rightClick.target.classList.contains("flagged")
-    && !rightClick.target.classList.contains("revealed")) {
-        rightClick.target.innerHTML = "<p>🚩</p>";
-        rightClick.target.classList.add("flagged");
-
-        console.debug("Box flagged");
-        console.debug(`=====`);
-    }
-}
-
-function removeFlag(doubleClick) {
-    if (doubleClick.target.classList.contains("flagged")) {
-        doubleClick.target.innerHTML = "";
-        doubleClick.target.classList.remove("flagged");
-
-        console.debug("Box un-flagged");
-        console.debug(`=====`);
-    }
-}
-
-function generateVisualPlayerBoard(boardSize) {
-    const row = document.createElement("tr");
-    const cell = document.createElement("td");
-
-    // Generate rows (TRs)
-    for (rowIndex = 0; rowIndex < boardSize; rowIndex++) {
-        /*
-         * If appendChild(row) is used as is, it only ever creates one row even in a loop.
-         * To append several children, add cloneNode(true): https://stackoverflow.com/a/12730905
-         */
-
-        visualPlayerBoard.appendChild(row.cloneNode(true));
-
-        let currentRow = visualPlayerBoard.lastChild;
-
-        // Generate cells (TDs) for each row
-        for (cellIndex = 0; cellIndex < boardSize; cellIndex++) {
-            currentRow.appendChild(cell.cloneNode(true));
-            
-            let currentCell = currentRow.lastChild;
-            currentCell.setAttribute("data-row", rowIndex);
-            currentCell.setAttribute("data-column", cellIndex);
-        }
-    }
-}
-
-function addFinalMessage(playerWins) {
-    const finalMessage = document.getElementById("finalMessage");
-    let message = "";
-    let style = "";
-
-    if (playerWins) {
-        message = "¡HAS GANADO";
-        style = "wins";
-        console.info(`PLAYER WINS :)`);
-    } else {
-        message = "¡BUM! SE ACABÓ EL JUEGO";
-        style = "loses";
-        console.error(`PLAYER LOSES :()`);
-    }
-
-    finalMessage.innerHTML = `<p>${message}</p>`;
-    finalMessage.classList.add(style);
-}
-
-function showReplayButton() {
-    const replayButton = document.getElementById("replayButton");
-    replayButton.style.visibility = "visible";
-}
-
-
-/* ------------------------------------------------------------------------------------------------------------------------------
- *  Functions: Internal Logic
- * ------------------------------------------------------------------------------------------------------------------------------ */
-
-/* Using handlers as per Google Gemini's suggestion when my removeEventListeners didn't work */
-
-function handleLeftClick(leftClick) {
-    // IF to avoid runtime conflict with doubleClick
-    if (!leftClick.target.classList.contains("flagged")) {
-        revealBox(leftClick);
-        if (!playerCanKeepPlaying()) endGame();
-    }
-}
-
-function handleRightClick(rightClick) { 
-    rightClick.preventDefault(); /* Prevents context menu from appearing (it's cumbersome) */
-    placeFlag(rightClick);
-}
-
-function handleDoubleClick(doubleClick) { removeFlag(doubleClick); }
 
 function generateLogicBoard(size, emptyChar) {
     let brd = [];
@@ -266,7 +122,7 @@ function placeMines(logicBoard, boardSize, numberOfMines) {
      * and add each new mine to the logic board
      */
     
-    let mineCoordenates = [];
+    //var mineCoordenates = []; // var so that it can be used in revealAllMines()
     let coord; // = [row, col]
     let row = -1;
     let col = -1;
@@ -327,3 +183,186 @@ function updateLogicalAdjacentBoxes(logicBoard, r, c) {
         console.debug(`Adjacent [${r}][${c}] updated`)
     } else console.debug(`Adjacent [${r}][${c}] is another mine`);
 }
+
+function generateVisualPlayerBoard(boardSize) {
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+
+    // Generate rows (TRs)
+    for (rowIndex = 0; rowIndex < boardSize; rowIndex++) {
+        /*
+         * If appendChild(row) is used as is, it only ever creates one row even in a loop.
+         * To append several children, add cloneNode(true): https://stackoverflow.com/a/12730905
+         */
+
+        visualPlayerBoard.appendChild(row.cloneNode(true));
+
+        let currentRow = visualPlayerBoard.lastChild;
+
+        // Generate cells (TDs) for each row
+        for (cellIndex = 0; cellIndex < boardSize; cellIndex++) {
+            currentRow.appendChild(cell.cloneNode(true));
+            
+            let currentCell = currentRow.lastChild;
+            currentCell.setAttribute("data-row", rowIndex);
+            currentCell.setAttribute("data-column", cellIndex);
+        }
+    }
+}
+
+function handleLeftClick(leftClick) {
+    // IF to avoid runtime conflict with doubleClick
+    if (!leftClick.target.classList.contains("flagged")) {
+        revealBox(leftClick);
+        if (!playerCanKeepPlaying()) endGame();
+    }
+}
+
+function handleRightClick(rightClick) { 
+    rightClick.preventDefault(); /* Prevents context menu from appearing (it's cumbersome) */
+    placeFlag(rightClick);
+}
+
+function handleDoubleClick(doubleClick) { removeFlag(doubleClick); }
+
+function playAgain() {
+    location.reload(); // Refresh page (F5)
+}
+
+function blockBoard() {
+    // Both when losing and when winning
+    visualPlayerBoard.removeEventListener("click", handleLeftClick);
+    visualPlayerBoard.removeEventListener("contextmenu", handleRightClick); 
+    visualPlayerBoard.removeEventListener("dblclick", handleDoubleClick);
+    console.debug(`Board blocked`);
+}
+
+function endGame(playerWins) {
+    if (!playerWins) revealAllMines();
+
+    blockBoard();
+    addFinalMessage(playerWins);
+    showReplayButton();
+}
+
+function revealBox(leftClick) {
+    const box = leftClick.target;
+    const row = box.getAttribute("data-row");
+    const col = box.getAttribute("data-column");
+    const equivalentLogicCell = checkLogicCell(row, col);
+
+    box.classList.add("revealed");
+    numberOfBoxesRevealed++;
+    console.debug(`Class of cell [${row}][${col}] changed to 'revealed'`);
+    console.debug(`Number of boxes revealed: ${numberOfBoxesRevealed} (total boxes to reveal: ${numberOfBoxesToReveal})`);
+
+    if (equivalentLogicCell == -1) {
+        box.innerHTML = "<p>💣</p>"; // WIP
+        box.classList.add("bombed");
+
+        endGame(false);
+        
+    } else {
+        if (equivalentLogicCell == 0) {
+            // Reveal box by box
+            box.innerHTML = "";
+            console.debug(`Empty cell revealed`);
+
+            // Reveal all empty adjacent boxes (unfinished...)
+            // showEmptyAdjacentBoxes(logicBoard, playerBoard, row, col);
+        } else {
+            box.innerHTML = `<p>${equivalentLogicCell}</p>`;
+            console.warn(`Number cell revealed`);
+        }
+    }
+
+    console.debug(`=====`);
+}
+
+// WIP:
+function revealAllMines() {
+    /**
+     * Uses var mineCoordenates[]
+     * Each coord in mineCoordenates[] is coord = [row, col]
+     * 
+     * Goes through each coord and reveals the corresponding cell in the visualPlayerBoard
+     */
+
+    let row = -1;
+    let col = -1;
+    let mineBox;
+
+    for (let i = 0; i < mineCoordenates.length; i++) {
+        coord = mineCoordenates[i];
+        row = coord[0];
+        col = coord[1];
+
+        mineBox = visualPlayerBoard.querySelector(`[data-row="${row}"], [data-column="${col}"]`);
+        mineBox.innerHTML = "<p>💣</p>"; // WIP
+        mineBox.classList.add("revealed");
+        mineBox.classList.add("bombed");
+        
+        console.debug(`Mine box [${row}][${col}] revealed`);
+    }
+}
+
+function playerCanKeepPlaying() {
+    if (numberOfBoxesRevealed >= numberOfBoxesToReveal) return false;
+    else return true;
+}
+
+function checkLogicCell(row, col) {
+    if (logicBoard[row][col] == -1) return -1;
+    else if (logicBoard[row][col] == 0) return 0;
+    else return parseInt(logicBoard[row][col]);
+}
+
+/** WIP: Cambiar el insertar HTML en banderas y bombas y números por hacer que la clase tenga un fondo, porque si no los clics me dan problemas */
+
+function placeFlag(rightClick) {
+    if (!rightClick.target.classList.contains("flagged")
+    && !rightClick.target.classList.contains("revealed")) {
+        rightClick.target.innerHTML = "<p>🚩</p>";
+        rightClick.target.classList.add("flagged");
+
+        console.debug("Box flagged");
+        console.debug(`=====`);
+    }
+}
+
+function removeFlag(doubleClick) {
+    if (doubleClick.target.classList.contains("flagged")) {
+        doubleClick.target.innerHTML = "";
+        doubleClick.target.classList.remove("flagged");
+
+        console.debug("Box un-flagged");
+        console.debug(`=====`);
+    }
+}
+
+function addFinalMessage(playerWins) {
+    const finalMessage = document.getElementById("finalMessage");
+    let message = "";
+    let style = "";
+
+    if (playerWins) {
+        message = "¡HAS GANADO";
+        style = "wins";
+        console.info(`PLAYER WINS :)`);
+    } else {
+        message = "¡BUM! SE ACABÓ EL JUEGO";
+        style = "loses";
+        console.error(`PLAYER LOSES :()`);
+    }
+
+    finalMessage.innerHTML = `<p>${message}</p>`;
+    finalMessage.classList.add(style);
+}
+
+function showReplayButton() {
+    const replayButton = document.getElementById("replayButton");
+    replayButton.style.visibility = "visible";
+}
+
+
+
