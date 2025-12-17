@@ -34,7 +34,7 @@ let numberOfBoxesRevealed = 0;
 
 let inputIsValid;
 
-var mineCoordenates = []; // var so that it can be used in a couple of functions
+var mineCoordenates = []; // var so that it can be used seamlessly in a couple of functions
 
 const replayButton = document.getElementById("replayButton");
 
@@ -94,15 +94,6 @@ window.onload = function() {
  * Functions (more or less in order of usage)
  * ------------------------------------------------------------------------------------------------------------------------------ */
 
-/**
- * generateLogicBoard
- * placeMines
- * generateVisualPlayerBoard
- * handleLeftClick
- * playAgain
- */
-
-
 function generateLogicBoard(size, emptyChar) {
     let brd = [];
 
@@ -122,7 +113,6 @@ function placeMines(logicBoard, boardSize, numberOfMines) {
      * and add each new mine to the logic board
      */
     
-    //var mineCoordenates = []; // var so that it can be used in revealAllMines()
     let coord; // = [row, col]
     let row = -1;
     let col = -1;
@@ -211,19 +201,21 @@ function generateVisualPlayerBoard(boardSize) {
 }
 
 function handleLeftClick(leftClick) {
-    // IF to avoid runtime conflict with doubleClick
-    if (!leftClick.target.classList.contains("flagged")) {
+    // IF to avoid runtime conflict with doubleClick and avoid more than one reveal per cell
+    if (!leftClick.target.classList.contains("flagged") && !leftClick.target.classList.contains("revealed")) {
         revealBox(leftClick);
-        if (!playerCanKeepPlaying()) endGame();
+        if (!playerCanKeepPlaying()) endGame(true);
     }
 }
 
 function handleRightClick(rightClick) { 
-    rightClick.preventDefault(); /* Prevents context menu from appearing (it's cumbersome) */
+    rightClick.preventDefault(); // Prevents context menu from appearing (it's cumbersome)
     placeFlag(rightClick);
 }
 
-function handleDoubleClick(doubleClick) { removeFlag(doubleClick); }
+function handleDoubleClick(doubleClick) {
+    removeFlag(doubleClick);
+}
 
 function playAgain() {
     location.reload(); // Refresh page (F5)
@@ -238,8 +230,7 @@ function blockBoard() {
 }
 
 function endGame(playerWins) {
-    if (!playerWins) revealAllMines();
-
+    revealAllMines(playerWins);
     blockBoard();
     addFinalMessage(playerWins);
     showReplayButton();
@@ -257,7 +248,6 @@ function revealBox(leftClick) {
     console.debug(`Number of boxes revealed: ${numberOfBoxesRevealed} (total boxes to reveal: ${numberOfBoxesToReveal})`);
 
     if (equivalentLogicCell == -1) {
-        box.innerHTML = "<p>💣</p>"; // WIP
         box.classList.add("bombed");
 
         endGame(false);
@@ -279,8 +269,7 @@ function revealBox(leftClick) {
     console.debug(`=====`);
 }
 
-// WIP:
-function revealAllMines() {
+function revealAllMines(playerWins) {
     /**
      * Uses var mineCoordenates[]
      * Each coord in mineCoordenates[] is coord = [row, col]
@@ -288,21 +277,23 @@ function revealAllMines() {
      * Goes through each coord and reveals the corresponding cell in the visualPlayerBoard
      */
 
-    let row = -1;
-    let col = -1;
+    let row = 0;
+    let col = 0;
     let mineBox;
+    let coord;
 
     for (let i = 0; i < mineCoordenates.length; i++) {
         coord = mineCoordenates[i];
         row = coord[0];
         col = coord[1];
 
-        mineBox = visualPlayerBoard.querySelector(`[data-row="${row}"], [data-column="${col}"]`);
-        mineBox.innerHTML = "<p>💣</p>"; // WIP
+        mineBox = visualPlayerBoard.querySelector(`[data-row="${row}"][data-column="${col}"]`);
         mineBox.classList.add("revealed");
-        mineBox.classList.add("bombed");
+
+        if (playerWins) mineBox.classList.add("flowered");
+        else mineBox.classList.add("bombed");
         
-        console.debug(`Mine box [${row}][${col}] revealed`);
+        console.debug(`Mine box [${row}][${col}] revealed: ${mineBox}`);
     }
 }
 
@@ -317,12 +308,9 @@ function checkLogicCell(row, col) {
     else return parseInt(logicBoard[row][col]);
 }
 
-/** WIP: Cambiar el insertar HTML en banderas y bombas y números por hacer que la clase tenga un fondo, porque si no los clics me dan problemas */
-
 function placeFlag(rightClick) {
     if (!rightClick.target.classList.contains("flagged")
     && !rightClick.target.classList.contains("revealed")) {
-        rightClick.target.innerHTML = "<p>🚩</p>";
         rightClick.target.classList.add("flagged");
 
         console.debug("Box flagged");
@@ -346,13 +334,13 @@ function addFinalMessage(playerWins) {
     let style = "";
 
     if (playerWins) {
-        message = "¡HAS GANADO";
+        message = "¡HAS GANADO!";
         style = "wins";
         console.info(`PLAYER WINS :)`);
     } else {
         message = "¡BUM! SE ACABÓ EL JUEGO";
         style = "loses";
-        console.error(`PLAYER LOSES :()`);
+        console.error(`PLAYER LOSES :(`);
     }
 
     finalMessage.innerHTML = `<p>${message}</p>`;

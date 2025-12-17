@@ -54,13 +54,26 @@ table#visualBoard {
 
         &.bombed {
             background-color: var(--rojo) !important;
+            background-image: url("./img/bomb.png");
+        }
+
+        &.flagged {
+            background-image: url("./img/flag.png");
+        }
+
+        &.flowered {
+            background-color: var(--verde) !important;
+            background-image: url("./img/flower.png");
+        }
+
+        &.bombed, &.flagged, &.flowered {
+            background-size: cover;
+            background-position: center;
         }
     }
 }
 
-.flagged {
-    /* WIP */
-}
+
 
 .wins {
     font-weight: bold;
